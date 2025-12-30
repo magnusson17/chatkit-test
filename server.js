@@ -25,7 +25,7 @@ app.post("/api/chatkit/session", async (req, res) => {
                 "OpenAI-Beta": "chatkit_beta=v1"
             },
             body: JSON.stringify({
-                user: { id: req.body?.user || 'anon' },
+                user: req.body?.user || "anon",
                 workflow: { id: WORKFLOW_ID }
             })
         })
@@ -37,11 +37,6 @@ app.post("/api/chatkit/session", async (req, res) => {
 
         // espongo il client_secret
         const session = await r.json()
-
-        console.log('session keys', Object.keys(session))
-        console.log('workflow in session?', session.workflow)
-        console.log('FULL session', session)
-
         res.json({ client_secret: session.client_secret })
 
     } catch (e) {
