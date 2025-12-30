@@ -1,4 +1,4 @@
-// fetcho il client_secret e monto una live chat widget
+// fetcho il client_secret e monto una "live chat widget"
 
 const el = document.getElementById("my-chat")
 
