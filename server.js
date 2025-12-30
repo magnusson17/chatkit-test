@@ -44,6 +44,7 @@ app.post("/api/chatkit/session", async (req, res) => {
     }
 })
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log("ChatKit session server running")
+app.listen(process.env.PORT || 10000, '0.0.0.0', () => {
+    console.log('ChatKit session server running on', process.env.PORT || 10000)
 })
+
