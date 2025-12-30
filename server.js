@@ -27,7 +27,6 @@ app.post("/api/chatkit/session", async (req, res) => {
             body: JSON.stringify({
                 user: req.body?.user || "anon",
                 workflow: { id: WORKFLOW_ID },
-                state: { is_logged_in: false }
             })
         })
 
