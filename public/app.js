@@ -1,5 +1,7 @@
 // fetcho il client_secret e monto una "live chat widget"
 
+// fetcho il client_secret e monto una "live chat widget"
+
 const el = document.getElementById("my-chat")
 
 el.setOptions({
@@ -12,7 +14,7 @@ el.setOptions({
     },
     header: {
         rightAction: {
-            icon: "moon",
+            icon: "dark-mode",
             onClick: () => { switch_theme("dark"); },
         }
     }
