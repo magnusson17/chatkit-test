@@ -1,9 +1,8 @@
 // fetcho il client_secret e monto una "live chat widget"
 
 const el = document.getElementById("my-chat")
-const btn = document.getElementById("toggle-theme")
 
-let scheme = "dark"
+let scheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 
 const baseOptions = {
     api: {
@@ -15,17 +14,21 @@ const baseOptions = {
     }
 }
 
-function applyOptions() {
+function apply() {
     el.setOptions({
         ...baseOptions,
-        theme: { colorScheme: scheme }
+        theme: { colorScheme: scheme },
+        header: {
+            customButtonRight: {
+                icon: scheme === "dark" ? "sun" : "moon",
+                onClick: () => {
+                    scheme = scheme === "dark" ? "light" : "dark"
+                    apply()
+                }
+            }
+        }
     })
 }
 
-applyOptions()
-
-btn.addEventListener("click", () => {
-    scheme = scheme === "dark" ? "light" : "dark"
-    applyOptions()
-})
+apply()
 
