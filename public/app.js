@@ -1,12 +1,11 @@
 // fetcho il client_secret e monto una "live chat widget"
 
 const el = document.getElementById("my-chat")
-const toggleTheme = document.getElementById("toggle-theme")
+const btn = document.getElementById("toggle-theme")
 
 let scheme = "dark"
 
-el.setOptions({
-    theme: { colorScheme: scheme },
+const baseOptions = {
     api: {
         async getClientSecret() {
             const res = await fetch("/api/chatkit/session", { method: "POST" })
@@ -14,9 +13,19 @@ el.setOptions({
             return client_secret
         }
     }
+}
+
+function applyOptions() {
+    el.setOptions({
+        ...baseOptions,
+        theme: { colorScheme: scheme }
+    })
+}
+
+applyOptions()
+
+btn.addEventListener("click", () => {
+    scheme = scheme === "dark" ? "light" : "dark"
+    applyOptions()
 })
 
-toggleTheme.addEventListener("click", () => {
-    scheme = scheme === "dark" ? "light" : "dark"
-    el.setOptions({ theme: { colorScheme: scheme } })
-})
