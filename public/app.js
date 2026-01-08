@@ -11,9 +11,9 @@ el.setOptions({
         }
     },
     header: {
-        customButtonRight: {
-            icon: "history",
-            onClick: () => console.log("clicked")
+        rightAction: {
+            icon: "moon",
+            onClick: () => { switch_theme("dark"); },
         }
     }
 })
