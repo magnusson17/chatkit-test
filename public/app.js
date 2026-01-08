@@ -1,5 +1,7 @@
 // fetcho il client_secret e monto una "live chat widget"
 
+await customElements.whenDefined("openai-chatkit")
+
 const el = document.getElementById("my-chat")
 
 let scheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
@@ -23,7 +25,7 @@ function apply() {
                 icon: scheme === "dark" ? "sun" : "moon",
                 onClick: () => {
                     scheme = scheme === "dark" ? "light" : "dark"
-                    apply()
+                    setTimeout(apply, 0) // defer
                 }
             }
         }
@@ -31,4 +33,5 @@ function apply() {
 }
 
 apply()
+
 
