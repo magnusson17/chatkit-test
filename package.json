@@ -21,5 +21,8 @@
     "dependencies": {
         "dotenv": "^17.2.3",
         "express": "^5.2.1"
+    },
+    "devDependencies": {
+        "local-ssl-proxy": "^2.0.5"
     }
 }
