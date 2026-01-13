@@ -4,23 +4,30 @@ const el = document.getElementById("my-chat")
 
 let scheme = "light"
 
+let drupalToken = null
+
+async function loadDrupalJwt() {
+    const res = await fetch("https://ai-test.vegstaging.com/web/api/auth/jwt", {
+        credentials: "include"
+    })
+    if (!res.ok) throw new Error("Drupal JWT failed: " + res.status)
+    const data = await res.json()
+    drupalToken = data.token
+}
+
 const api = {
     async getClientSecret() {
 
-        // prendo JWT da drupal
-        const res1 = await fetch("https://ai-test.vegstaging.com/web/api/auth/jwt", {
-            credentials: "include"
-        })
-        const { token } = await res1.json()
+        if (!drupalToken) await loadDrupalJwt()
 
         // scambio il token per avere una sessione di chatkit
-        const res2 = await fetch("/api/chatkit/session", {
+        const res = await fetch("/api/chatkit/session", {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${token}`
             }
         })
-        const { client_secret } = await res2.json()
+        const { client_secret } = await res.json()
         return client_secret
     }
 }
