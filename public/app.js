@@ -15,16 +15,19 @@ async function loadDrupalJwt() {
     drupalToken = data.token
 }
 
+// Load immediately in the parent page context
+loadDrupalJwt().catch(console.error)
+
 const api = {
     async getClientSecret() {
 
-        if (!drupalToken) await loadDrupalJwt()
+        if (!drupalToken) throw new Error("Missing Drupal JWT (login on Drupal required)")
 
-        // scambio il token per avere una sessione di chatkit
+        // scambio il drupalToken per avere una sessione di chatkit
         const res = await fetch("/api/chatkit/session", {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${token}`
+                Authorization: `Bearer ${drupalToken}`
             }
         })
         const { client_secret } = await res.json()
