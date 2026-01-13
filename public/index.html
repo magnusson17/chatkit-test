@@ -31,8 +31,15 @@
 </style>
 
 <body>
+    <div id="login">
+        <h3>Login</h3>
+        <input id="name" placeholder="Drupal username" />
+        <input id="pass" type="password" placeholder="Password" />
+        <button id="btn">Login</button>
+        <p id="err"></p>
+    </div>
 
-    <openai-chatkit id="my-chat"></openai-chatkit>
+    <openai-chatkit id="my-chat" style="display: none"></openai-chatkit>
 
     <!-- js per recuperare il client_secret e montare la chat -->
     <script type="module" src="./app.js"></script>
