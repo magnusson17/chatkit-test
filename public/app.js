@@ -6,8 +6,21 @@ let scheme = "light"
 
 const api = {
     async getClientSecret() {
-        const res = await fetch("/api/chatkit/session", { method: "POST" })
-        const { client_secret } = await res.json()
+
+        // prendo JWT da drupal
+        const res1 = await fetch("https://ai-test.vegstaging.com/web/api/auth/jwt", {
+            credentials: "include"
+        })
+        const { token } = await res1.json()
+
+        // scambio il token per avere una sessione di chatkit
+        const res2 = await fetch("/api/chatkit/session", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        const { client_secret } = await res2.json()
         return client_secret
     }
 }

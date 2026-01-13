@@ -2,6 +2,7 @@
 
 import "dotenv/config"
 import express from "express"
+import jwt from "jsonwebtoken"
 
 const app = express()
 
@@ -10,13 +11,42 @@ app.use(express.static("public"))
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const WORKFLOW_ID = process.env.WORKFLOW_ID
+const DRUPAL_JWT_SECRET = process.env.DRUPAL_JWT_SECRET
 
 if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY")
 if (!WORKFLOW_ID) throw new Error("Missing WORKFLOW_ID")
+if (!DRUPAL_JWT_SECRET) throw new Error("Missing DRUPAL_JWT_SECRET")
 
+function getBearerToken(req) {
+    const auth = req.headers.authorization || ""
+    const [type, token] = auth.split(" ")
+    if (type !== "Bearer" || !token) return null
+    return token
+}
+
+// crea la route /api/chatkit/session
 app.post("/api/chatkit/session", async (req, res) => {
 
     try {
+
+        const token = getBearerToken(req)
+        if (!token) {
+            return res.status(401).json({ ok: false, error: "Missing Authorization Bearer token" })
+        }
+
+        let payload
+        try {
+            payload = jwt.verify(token, DRUPAL_JWT_SECRET)
+        } catch (e) {
+            return res.status(401).json({ ok: false, error: "Invalid or expired token" })
+        }
+
+        const drupalUid = String(payload.sub || "")
+        if (!drupalUid) {
+            return res.status(401).json({ ok: false, error: "Token missing sub (uid)" })
+        }
+
+        // da route app.post("/api/chatkit/session" faccio un fetch di https://api.openai.com/v1/chatkit/sessions
         const r = await fetch("https://api.openai.com/v1/chatkit/sessions", {
             method: "POST",
             headers: {
