@@ -4,6 +4,7 @@ import "dotenv/config"
 import express from "express"
 import cookieParser from "cookie-parser"
 import jwt from "jsonwebtoken"
+import rateLimit from "express-rate-limit"
 
 const app = express()
 
@@ -55,7 +56,15 @@ function getUserIdFromCookie(req) {
     }
 }
 
-app.post("/api/login", async (req, res) => {
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 min
+    max: 10, // 10 attempts per IP per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, error: "Too many login attempts, try again later" }
+})
+
+app.post("/api/login", loginLimiter, async (req, res) => {
 
     try {
         const name = String(req.body?.name || "")
@@ -93,15 +102,14 @@ app.post("/api/logout", (req, res) => {
     res.json({ ok: true })
 })
 
-// crea la route /api/chatkit/session
+// creo la route /api/chatkit/session
 app.post("/api/chatkit/session", async (req, res) => {
-    
+
     try {
         const uid = getUserIdFromCookie(req)
-        if (!uid) {
-            return res.status(401).json({ ok: false, error: "Not logged in" })
-        }
+        if (!uid) { return res.status(401).json({ ok: false, error: "Not logged in" }) }
 
+        // quando nel front end chiamerò /api/chatkit/session farò il fetch a openai
         const r = await fetch("https://api.openai.com/v1/chatkit/sessions", {
             method: "POST",
             headers: {

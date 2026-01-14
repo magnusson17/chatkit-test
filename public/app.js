@@ -1,5 +1,6 @@
 const elChat = document.getElementById("my-chat")
 const elLogin = document.getElementById("login")
+const elLogout = document.getElementById("logout")
 const elErr = document.getElementById("err")
 const elName = document.getElementById("name")
 const elPass = document.getElementById("pass")
@@ -32,6 +33,16 @@ const api = {
     }
 }
 
+async function tryAutoStart() {
+    const res = await fetch("/api/chatkit/session", { method: "POST" })
+    if (res.ok) {
+        elLogin.style.display = "none"
+        elLogout.style.display = "block"
+        mountChatkit()
+    }
+}
+
+tryAutoStart()
 
 function mountChatkit() {
     elChat.style.display = "block"
@@ -60,10 +71,16 @@ elBtn.addEventListener("click", async () => {
         await login(elName.value.trim(), elPass.value)
 
         elLogin.style.display = "none"
+        elLogout.style.display = "block"
         mountChatkit()
     } catch (e) {
         elErr.textContent = e.message
     } finally {
         elBtn.disabled = false
     }
+})
+
+elLogout.addEventListener("click", async () => {
+    await fetch("/api/logout", { method: "POST" })
+    window.location.reload()
 })
