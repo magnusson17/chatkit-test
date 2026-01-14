@@ -32,6 +32,7 @@ const api = {
     }
 }
 
+
 function mountChatkit() {
     elChat.style.display = "block"
 
@@ -55,8 +56,8 @@ elBtn.addEventListener("click", async () => {
 
     try {
         elBtn.disabled = true
-        const token = await login(elName.value.trim(), elPass.value)
-        drupalToken = token
+
+        await login(elName.value.trim(), elPass.value)
 
         elLogin.style.display = "none"
         mountChatkit()
