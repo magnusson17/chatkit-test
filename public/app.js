@@ -24,9 +24,6 @@ const api = {
     async getClientSecret() {
         const res = await fetch("/api/chatkit/session", {
             method: "POST",
-            headers: {
-                Authorization: `Bearer ${drupalToken}`
-            }
         })
 
         const data = await res.json()
@@ -58,7 +55,7 @@ elBtn.addEventListener("click", async () => {
 
     try {
         elBtn.disabled = true
-        const token = await loginDrupal(elName.value.trim(), elPass.value)
+        const token = await login(elName.value.trim(), elPass.value)
         drupalToken = token
 
         elLogin.style.display = "none"
