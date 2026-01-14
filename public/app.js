@@ -6,10 +6,9 @@ const elPass = document.getElementById("pass")
 const elBtn = document.getElementById("btn")
 
 let scheme = "light"
-let drupalToken = null
 
-async function loginDrupal(name, pass) {
-    const res = await fetch("https://ai-test.vegstaging.com/web/api/auth/login", {
+async function login(name, pass) {
+    const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, pass })
@@ -18,23 +17,17 @@ async function loginDrupal(name, pass) {
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.error || `Login failed (${res.status})`)
 
-    return data.token
+    return true
 }
 
 const api = {
     async getClientSecret() {
-        if (!drupalToken) throw new Error("Not logged in")
-
         const res = await fetch("/api/chatkit/session", {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${drupalToken}`
             }
         })
-
-        // check in caso di 401
-        // const text = await res.text()
-        // console.log("chatkit/session status", res.status, text)
 
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || "Session failed")

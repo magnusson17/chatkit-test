@@ -19,6 +19,7 @@
     },
     "homepage": "https://github.com/magnusson17/chatkit-test#readme",
     "dependencies": {
+        "cookie-parser": "^1.4.7",
         "dotenv": "^17.2.3",
         "express": "^5.2.1",
         "jsonwebtoken": "^9.0.3"

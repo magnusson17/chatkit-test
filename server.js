@@ -2,51 +2,106 @@
 
 import "dotenv/config"
 import express from "express"
+import cookieParser from "cookie-parser"
 import jwt from "jsonwebtoken"
 
 const app = express()
 
 app.use(express.json())
+app.use(cookieParser())
 app.use(express.static("public"))
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 const WORKFLOW_ID = process.env.WORKFLOW_ID
 const DRUPAL_JWT_SECRET = process.env.DRUPAL_JWT_SECRET
+const DRUPAL_AUTH_URL = process.env.DRUPAL_AUTH_URL
 
 if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY")
 if (!WORKFLOW_ID) throw new Error("Missing WORKFLOW_ID")
 if (!DRUPAL_JWT_SECRET) throw new Error("Missing DRUPAL_JWT_SECRET")
+if (!DRUPAL_AUTH_URL) throw new Error("Missing DRUPAL_AUTH_URL")
 
-function getBearerToken(req) {
-    const auth = req.headers.authorization || ""
-    const [type, token] = auth.split(" ")
-    if (type !== "Bearer" || !token) return null
-    return token
+const COOKIE_NAME = "ck_auth"
+
+function setAuthCookie(res, token) {
+    res.cookie(COOKIE_NAME, token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: "/"
+    })
 }
+
+function clearAuthCookie(res) {
+    res.clearCookie(COOKIE_NAME, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/"
+    })
+}
+
+function getUserIdFromCookie(req) {
+    const token = req.cookies?.[COOKIE_NAME]
+    if (!token) return null
+
+    try {
+        const payload = jwt.verify(token, DRUPAL_JWT_SECRET)
+        const uid = String(payload.sub || "")
+        return uid || null
+    } catch {
+        return null
+    }
+}
+
+app.post("/api/login", async (req, res) => {
+
+    try {
+        const name = String(req.body?.name || "")
+        const pass = String(req.body?.pass || "")
+
+        if (!name || !pass) {
+            return res.status(400).json({ ok: false, error: "Missing name or pass" })
+        }
+
+        const r = await fetch(DRUPAL_AUTH_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, pass })
+        })
+
+        const data = await r.json().catch(() => ({}))
+        if (!r.ok) {
+            return res.status(r.status).json({ ok: false, error: data.error || "Drupal login failed" })
+        }
+
+        const token = data.token
+        if (!token) {
+            return res.status(500).json({ ok: false, error: "Drupal did not return token" })
+        }
+
+        setAuthCookie(res, token)
+        res.json({ ok: true })
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message })
+    }
+})
+
+app.post("/api/logout", (req, res) => {
+    clearAuthCookie(res)
+    res.json({ ok: true })
+})
 
 // crea la route /api/chatkit/session
 app.post("/api/chatkit/session", async (req, res) => {
-
+    
     try {
-
-        const token = getBearerToken(req)
-        if (!token) {
-            return res.status(401).json({ ok: false, error: "Missing Authorization Bearer token" })
+        const uid = getUserIdFromCookie(req)
+        if (!uid) {
+            return res.status(401).json({ ok: false, error: "Not logged in" })
         }
 
-        let payload
-        try {
-            payload = jwt.verify(token, DRUPAL_JWT_SECRET)
-        } catch (e) {
-            return res.status(401).json({ ok: false, error: "Invalid or expired token" })
-        }
-
-        const drupalUid = String(payload.sub || "")
-        if (!drupalUid) {
-            return res.status(401).json({ ok: false, error: "Token missing sub (uid)" })
-        }
-
-        // da route app.post("/api/chatkit/session" faccio un fetch di https://api.openai.com/v1/chatkit/sessions
         const r = await fetch("https://api.openai.com/v1/chatkit/sessions", {
             method: "POST",
             headers: {
@@ -55,8 +110,8 @@ app.post("/api/chatkit/session", async (req, res) => {
                 "OpenAI-Beta": "chatkit_beta=v1"
             },
             body: JSON.stringify({
-                user: req.body?.user || "anon",
-                workflow: { id: WORKFLOW_ID },
+                user: uid,
+                workflow: { id: WORKFLOW_ID }
             })
         })
 
@@ -65,10 +120,8 @@ app.post("/api/chatkit/session", async (req, res) => {
             return res.status(r.status).send(text)
         }
 
-        // espongo il client_secret
         const session = await r.json()
         res.json({ client_secret: session.client_secret })
-
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message })
     }
