@@ -32,6 +32,10 @@ const api = {
             }
         })
 
+        // check in caso di 401
+        // const text = await res.text()
+        // console.log("chatkit/session status", res.status, text)
+
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || "Session failed")
         return data.client_secret
